@@ -7,9 +7,22 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      squares: Array(36).fill(null),
+      columns: 25,
+      colArray: Array(25).fill(null),
+      rows: 25,
+      rowArray: Array(25).fill(null),
+      squares: [],
       gameState: 'initial',
     }
+  }
+
+  componentWillMount = () => {
+    const { squares, columns, rows } = this.state
+    for (let i = 0; i < rows; i++) {
+      const newRow = Array(columns).fill(null)
+      squares.push(newRow)
+    }
+    this.setState({ squares })
   }
 
   handleOnSubmit = () => {
@@ -18,16 +31,23 @@ class App extends Component {
   }
 
   handleOnComplete = () => {
+    const { columns, rows } = this.state
+    const newSquares = []
+    for (let i = 0; i < rows; i++) {
+      const newRow = Array(columns).fill(null)
+      newSquares.push(newRow)
+    }
     this.setState({
-      squares: Array(36).fill(null),
+      squares: newSquares,
       gameState: 'initial'
     })
   }
 
   handleOnClick = (event) => {
-    const id = event.target.id
+    const colIndex = event.currentTarget.getAttribute('colIndex')
+    const rowIndex = event.currentTarget.getAttribute('rowIndex')
     let { squares } = this.state
-    squares[id] = (squares[id] === 'X') ? null : 'X'
+    squares[rowIndex][colIndex] = (squares[rowIndex][colIndex] === 'X') ? null : 'X'
     this.setState({ squares })
   }
 
@@ -36,67 +56,52 @@ class App extends Component {
   }
 
   playGame = () => {
-    const { squares } = this.state
-    let { gameState } = this.state
+    const { rows, columns, squares } = this.state
 
     const origSquares = squares.slice()
-    for (let i = 0; i < squares.length; i++) {
-      let aliveCount = 0
-      if (origSquares[i - 7]) {
-        aliveCount++
-      }
-      if (origSquares[i - 6]) {
-        aliveCount++
-      }
-      if (origSquares[i - 5]) {
-        aliveCount++
-      }
-      if (origSquares[i - 1]) {
-        aliveCount++
-      }
-      if (origSquares[i + 1]) {
-        aliveCount++
-      }
-      if (origSquares[i + 5]) {
-        aliveCount++
-      }
-      if (origSquares[i + 6]) {
-        aliveCount++
-      }
-      if (origSquares[i + 7]) {
-        aliveCount++
-      }
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < columns; j++) {
+        let aliveCount = 0
 
-      if (origSquares[i]) {
-        if (aliveCount < 2 || aliveCount > 3) {
-          squares[i] = null
-        }
-      } else {
-        if (aliveCount === 3) {
-          squares[i] = 'X'
+        aliveCount += (i > 0 && j > 0 && origSquares[i - 1][j - 1]) ? 1 : 0
+        aliveCount += (i > 0 && origSquares[i - 1][j]) ? 1 : 0
+        aliveCount += (i > 0 && j < columns - 1 && origSquares[i - 1][j + 1]) ? 1 : 0
+
+        aliveCount += (j > 0 && origSquares[i][j - 1]) ? 1 : 0
+        aliveCount += (j < columns - 1 && origSquares[i][j + 1]) ? 1 : 0
+
+        aliveCount += (i < rows - 1 && j > 0 && origSquares[i + 1][j - 1]) ? 1 : 0
+        aliveCount += (i < rows - 1 && origSquares[i + 1][j]) ? 1 : 0
+        aliveCount += (i < rows - 1 && j < columns - 1 && origSquares[i + 1][j + 1]) ? 1 : 0
+
+        if (origSquares[i][j]) {
+          if (aliveCount < 2 || aliveCount > 3) {
+            squares[i][j] = null
+          }
+        } else {
+          if (aliveCount === 3) {
+            squares[i][j] = 'X'
+          }
         }
       }
     }
-    
-    for (let i = 0; i < squares.length; i++) {
-      if (squares[i] !== origSquares[i]) {
-        this.setState({ squares })
-        return
-      } else if (i === squares.length - 1 && squares[i] === origSquares[i]) {
-        gameState = 'complete'
-        this.setState({ gameState })
-      }
-    }
+
+    this.setState({ squares })
+    // for (let i = 0; i < squares.length; i++) {
+    //   if (i === squares.length - 1 && squares[i] === origSquares[i]) {
+    //     this.setState({ gameState: 'complete' })
+    //   }
+    // }
   }
 
   render() {
-    const { squares, gameState } = this.state
+    const { colArray, rowArray, squares, gameState } = this.state
     return (
       <div>
         {gameState === 'initial'
           ? (
             <div>
-              <Board squares={squares} handleOnClick={this.handleOnClick} />
+              <Board colArray={colArray} rowArray={rowArray} squares={squares} handleOnClick={this.handleOnClick} />
               <button type="button" onClick={this.handleOnSubmit}>
                 Confirm intial placement
               </button>
@@ -105,10 +110,10 @@ class App extends Component {
         {gameState === 'playing'
           ? (
             <div>
-              <Board squares={squares} />
+              <Board colArray={colArray} rowArray={rowArray} squares={squares} />
               <button type="button" onClick={this.nextGeneration}>
                 Next generation
-              </button>  
+              </button>
               <button type="button" onClick={this.handleOnComplete}>
                 Stop and play again
               </button>
@@ -117,7 +122,7 @@ class App extends Component {
         {gameState === 'complete'
           ? (
             <div>
-              <Board squares={squares} />
+              <Board colArray={colArray} rowArray={rowArray} squares={squares} />
               <button type="button" onClick={this.handleOnComplete}>
                 Play again
               </button>
