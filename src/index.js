@@ -7,12 +7,12 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      columns: 25,
-      colArray: Array(25).fill(null),
-      rows: 25,
-      rowArray: Array(25).fill(null),
+      columns: 5,
+      colArray: Array(5).fill(null),
+      rows: 5,
+      rowArray: Array(5).fill(null),
       squares: [],
-      gameState: 'initial',
+      gameState: 'initial'
     }
   }
 
@@ -25,7 +25,14 @@ class App extends Component {
     this.setState({ squares })
   }
 
-  handleOnSubmit = () => {
+  handleOnSubmit = async () => {
+    const dummyEvent = document.createElement('button')
+    dummyEvent.setAttribute('colindex', '')
+    dummyEvent.setAttribute('rowindex', '')
+    await this.handleOnClick({
+      currentTarget: dummyEvent
+    })
+    console.log('submit: ', this.state.squares)
     this.setState({ gameState: 'playing' })
     this.playGame()
   }
@@ -44,11 +51,12 @@ class App extends Component {
   }
 
   handleOnClick = (event) => {
+    console.log(event.currentTarget)
     const colIndex = event.currentTarget.getAttribute('colIndex')
     const rowIndex = event.currentTarget.getAttribute('rowIndex')
     let { squares } = this.state
     squares[rowIndex][colIndex] = (squares[rowIndex][colIndex] === 'X') ? null : 'X'
-    this.setState({ squares })
+    this.setState({ squares }, function () {console.log(squares)})
   }
 
   nextGeneration = () => {
@@ -59,22 +67,33 @@ class App extends Component {
     const { rows, columns, squares } = this.state
 
     const origSquares = squares.slice()
+    console.log(origSquares)
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < columns; j++) {
         let aliveCount = 0
 
-        aliveCount += (i > 0 && j > 0 && origSquares[i - 1][j - 1]) ? 1 : 0
-        aliveCount += (i > 0 && origSquares[i - 1][j]) ? 1 : 0
-        aliveCount += (i > 0 && j < columns - 1 && origSquares[i - 1][j + 1]) ? 1 : 0
+        // check row above current cell
+        if (i > 0) {
+          aliveCount += (j > 0 && !!origSquares[i - 1][j - 1]) ? 1 : 0
+          aliveCount += (!!origSquares[i - 1][j]) ? 1 : 0
+          aliveCount += (j < columns - 1 && !!origSquares[i - 1][j + 1]) ? 1 : 0
+          console.log('above: ', aliveCount)
+        }
 
-        aliveCount += (j > 0 && origSquares[i][j - 1]) ? 1 : 0
-        aliveCount += (j < columns - 1 && origSquares[i][j + 1]) ? 1 : 0
+        // check current row of cell
+        aliveCount += (j > 0 && !!origSquares[i][j - 1]) ? 1 : 0
+        aliveCount += (j < columns - 1 && !!origSquares[i][j + 1]) ? 1 : 0
+        console.log('current: ', aliveCount)
 
-        aliveCount += (i < rows - 1 && j > 0 && origSquares[i + 1][j - 1]) ? 1 : 0
-        aliveCount += (i < rows - 1 && origSquares[i + 1][j]) ? 1 : 0
-        aliveCount += (i < rows - 1 && j < columns - 1 && origSquares[i + 1][j + 1]) ? 1 : 0
+        // check row below current cell
+        if (i < rows - 1) {
+          aliveCount += (j > 0 && !!origSquares[i + 1][j - 1]) ? 1 : 0
+          aliveCount += (!!origSquares[i + 1][j]) ? 1 : 0
+          aliveCount += (j < columns - 1 && !!origSquares[i + 1][j + 1]) ? 1 : 0
+          console.log('below: ', aliveCount)
+        }
 
-        if (origSquares[i][j]) {
+        if (!!origSquares[i][j]) {
           if (aliveCount < 2 || aliveCount > 3) {
             squares[i][j] = null
           }
