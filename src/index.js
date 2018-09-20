@@ -7,13 +7,14 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      columns: 5,
-      colArray: Array(5).fill(false),
-      rows: 5,
-      rowArray: Array(5).fill(false),
+      columns: 20,
+      colArray: Array(20).fill(false),
+      rows: 20,
+      rowArray: Array(20).fill(false),
       squares: [],
       gameState: 'initial',
-      playInterval: null
+      playInterval: null,
+      delayInterval: 200
     }
   }
 
@@ -35,7 +36,7 @@ class App extends Component {
   }
 
   handlePlayToggle = () => {
-    const { gameState, playInterval } = this.state
+    const { gameState, playInterval, delayInterval } = this.state
     if (gameState === 'playing') {
       this.setState({
         gameState: 'stop',
@@ -45,7 +46,7 @@ class App extends Component {
       console.log(this.state.squares)
       this.setState({
         gameState: 'playing',
-        playInterval: setInterval(this.playGame, 2000)
+        playInterval: setInterval(this.playGame, delayInterval)
       })
     }
   }
@@ -58,57 +59,51 @@ class App extends Component {
     this.setState({ squares })
   }
 
+  checkNeighbors = (board, row, column) => {
+    const i = row
+    const j = column
+    const { rows, columns } = this.state
+    let aliveCount = 0
+
+    // check row above current cell
+    if (i > 0) {
+      aliveCount += (j > 0 && board[i - 1][j - 1]) ? 1 : 0
+      aliveCount += (board[i - 1][j]) ? 1 : 0
+      aliveCount += (j < columns - 1 && board[i - 1][j + 1]) ? 1 : 0
+    }
+
+    // check current row of cell
+    aliveCount += (j > 0 && board[i][j - 1]) ? 1 : 0
+    aliveCount += (j < columns - 1 && board[i][j + 1]) ? 1 : 0
+
+    // check row below current cell
+    if (i < rows - 1) {
+      aliveCount += (j > 0 && board[i + 1][j - 1]) ? 1 : 0
+      aliveCount += (board[i + 1][j]) ? 1 : 0
+      aliveCount += (j < columns - 1 && board[i + 1][j + 1]) ? 1 : 0
+    }
+    return aliveCount
+  }
+
   playGame = () => {
     const { rows, columns, squares } = this.state
-    const newSquares = squares.slice()
-    console.log('here: ', newSquares)
+    const newSquares = JSON.parse(JSON.stringify(squares))
+    
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < columns; j++) {
-        let aliveCount = 0
-
-        // check row above current cell
-        if (i > 0) {
-          aliveCount += (j > 0 && squares[i - 1][j - 1]) ? 1 : 0
-          aliveCount += (squares[i - 1][j]) ? 1 : 0
-          aliveCount += (j < columns - 1 && squares[i - 1][j + 1]) ? 1 : 0
-          console.log('above: ', i, j, aliveCount)
-        }
-
-        // check current row of cell
-        aliveCount += (j > 0 && squares[i][j - 1]) ? 1 : 0
-        aliveCount += (j < columns - 1 && squares[i][j + 1]) ? 1 : 0
-        // console.log('current: ', aliveCount)
-
-        // check row below current cell
-        if (i < rows - 1) {
-          aliveCount += (j > 0 && squares[i + 1][j - 1]) ? 1 : 0
-          aliveCount += (squares[i + 1][j]) ? 1 : 0
-          aliveCount += (j < columns - 1 && squares[i + 1][j + 1]) ? 1 : 0
-          // console.log('below: ', i, j, aliveCount)
-        }
-
-        if (i === 1 && j === 1) {
-          console.log(aliveCount)
-        }
-
+        const count = this.checkNeighbors(squares, i, j, rows, columns)
         if (squares[i][j]) {
-          if (aliveCount < 2 || aliveCount > 3) {
+          if (count < 2 || count > 3) {
             newSquares[i][j] = false
           }
         } else {
-          if (aliveCount === 3) {
+          if (count === 3) {
             newSquares[i][j] = 'X'
           }
         }
       }
     }
-
     this.setState({ squares: newSquares })
-    // for (let i = 0; i < squares.length; i++) {
-    //   if (i === squares.length - 1 && squares[i] === origSquares[i]) {
-    //     this.setState({ gameState: 'complete' })
-    //   }
-    // }
   }
 
   render() {
@@ -116,17 +111,17 @@ class App extends Component {
     return (
       <div>
         <Board colArray={colArray} rowArray={rowArray} squares={squares} handleSquareToggle={this.handleSquareToggle} />
-        { (gameState === 'playing')
-        ? (
-          <button type="button" onClick={this.handlePlayToggle}>
-            Stop
+        {(gameState === 'playing')
+          ? (
+            <button type="button" onClick={this.handlePlayToggle}>
+              Stop
           </button>
-        ) : (
-          <button type="button" onClick={this.handlePlayToggle}>
-            Start
+          ) : (
+            <button type="button" onClick={this.handlePlayToggle}>
+              Start
           </button>
-        ) }
-        <button type="button" onClick={this.handlePlayToggle}>
+          )}
+        <button type="button" onClick={this.playGame}>
           Next generation
         </button>
         <button type="button" onClick={this.createEmptyBoard}>
