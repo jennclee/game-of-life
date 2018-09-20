@@ -16,8 +16,13 @@ For more context on Conway's Game of Life: [Wikipedia](https://en.wikipedia.org/
 
 ### Features
 As of 2018/09:
-- Ability to reset game during play
-- Ability to manually click through each generation change
+- Start and stop auto-playthrough of generations
+- Step through next generations upon button click
+- Clear board
+
+Potential features:
+- Change board size
+- Change interval timing
 
 ### Notes
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
