@@ -1,6 +1,8 @@
 ### Game of Life
 Simple React app for Conway's Game of Life
 
+![](ConwayGameOfLife.gif)
+
 #### Rules:
 1. Any live cell with fewer than two live neighbors dies, as if by under population.
 2. Any live cell with two or three live neighbors lives on to the next generation.
